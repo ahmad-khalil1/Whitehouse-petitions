@@ -25,20 +25,25 @@ class ViewController: UITableViewController {
             
         }
         
-        if let url = URL(string: urlString) {
-            if let data = try? Data(contentsOf: url) {
-                parse(json: data)
-                 return
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            if let url = URL(string: urlString) {
+                if let data = try? Data(contentsOf: url) {
+                    self?.parse(json: data)
+                    return
+                }
+                self?.showMessage()
             }
-            showMessage()
         }
+        
         
                 
     }
     func showMessage(){
+        DispatchQueue.main.async{ [weak self] in
         let alert = UIAlertController(title: "Error loading data", message: "There was a problem loading the feed; please check your connection and try again.", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "ok", style: .default, handler: nil))
-        present(alert,animated: true)
+        self?.present(alert,animated: true)
+        }
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -60,7 +65,12 @@ class ViewController: UITableViewController {
     func parse(json: Data){
         
         let decoder = JSONDecoder()
-        if let  decodedJsonData =  try? decoder.decode(Petitions.self, from: json) {   petitions = decodedJsonData.results}
+        if let  decodedJsonData =  try? decoder.decode(Petitions.self, from: json) {   petitions = decodedJsonData.results
+            DispatchQueue.main.async{ [weak self ] in
+                self?.tableView.reloadData()
+            }
+            
+        }
         
         
         
