@@ -8,13 +8,62 @@
 
 import UIKit
 
-class ViewController: UIViewController {
-
+class ViewController: UITableViewController {
+    
+    var petitions = [Petition]()
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
+        
+        let urlString : String
+        if navigationController?.tabBarItem.tag == 0 {
+            
+            urlString = "https://www.hackingwithswift.com/samples/petitions-1.json"
+        }else {
+            urlString = "https://www.hackingwithswift.com/samples/petitions-2.json"
+            
+        }
+        
+        if let url = URL(string: urlString) {
+            if let data = try? Data(contentsOf: url) {
+                parse(json: data)
+                 return
+            }
+            showMessage()
+        }
+        
+                
     }
-
-
+    func showMessage(){
+        let alert = UIAlertController(title: "Error loading data", message: "There was a problem loading the feed; please check your connection and try again.", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "ok", style: .default, handler: nil))
+        present(alert,animated: true)
+    }
+    
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return petitions.count
+    }
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+        cell.textLabel?.text = petitions[indexPath.row].title
+        cell.detailTextLabel?.text = petitions[indexPath.row].body
+        return cell 
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let vc = DetailViewController()
+        vc.detailPetition = petitions[indexPath.row]
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    func parse(json: Data){
+        
+        let decoder = JSONDecoder()
+        if let  decodedJsonData =  try? decoder.decode(Petitions.self, from: json) {   petitions = decodedJsonData.results}
+        
+        
+        
+    }
+    
 }
-
